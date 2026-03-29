@@ -18,6 +18,15 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Load API key from local.properties
+        val spoonacularApiKey = project.rootProject.file("local.properties")
+            .readLines()
+            .find { it.startsWith("SPOONACULAR_API_KEY=") }
+            ?.split("=")
+            ?.get(1) ?: ""
+
+        buildConfigField("String", "SPOONACULAR_API_KEY", "\"${spoonacularApiKey}\"")
     }
 
     buildTypes {
@@ -41,6 +50,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {
@@ -91,4 +101,20 @@ dependencies {
     // Material3 UI
     implementation("androidx.compose.material3:material3:1.3.1")
     implementation("androidx.compose.material3:material3-window-size-class:1.3.1")
+
+    // Retrofit & Gson
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // Coil for image preview
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+    // For camera
+    implementation("androidx.camera:camera-core:1.2.3")
+    implementation("androidx.camera:camera-camera2:1.2.3")
+    implementation("androidx.camera:camera-lifecycle:1.2.3")
+    implementation("androidx.camera:camera-view:1.2.3")
+
+    // Icons
+    implementation("androidx.compose.material:material-icons-extended")
 }

@@ -1,11 +1,12 @@
-package com.example.fittrack
+package com.example.fittrack.viewmodels
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.fittrack.data.UserDao
-import com.example.fittrack.data.UserEntity
-import com.example.fittrack.data.UserProfile
+import com.example.fittrack.data.dao.UserDao
+import com.example.fittrack.data.model.UserEntity
+import com.example.fittrack.data.model.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.ktx.database
@@ -159,5 +160,16 @@ class AuthViewModel(private val userDao: UserDao) : ViewModel() {
         auth.signOut()
         currentUser.value = null
         userProfile.value = null
+    }
+}
+
+// ViewModelFactory to provide UserDao to AuthViewModel
+class AuthViewModelFactory(private val userDao: UserDao) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return AuthViewModel(userDao) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

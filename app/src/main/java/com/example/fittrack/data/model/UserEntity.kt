@@ -1,9 +1,9 @@
-package com.example.fittrack.data
+package com.example.fittrack.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-// Table name in DB
+// User Profile Table
 @Entity(tableName = "user_profile")
 data class UserEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,

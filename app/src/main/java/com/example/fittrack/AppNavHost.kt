@@ -2,78 +2,81 @@ package com.example.fittrack
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.fittrack.api.ApiClient
 import com.example.fittrack.data.AppDatabase
-import com.example.fittrack.data.UserDao
+import com.example.fittrack.data.dao.FoodDao
+import com.example.fittrack.data.dao.UserDao
 import com.example.fittrack.screens.*
+import com.example.fittrack.viewmodels.*
 
-
+// Screen Routes
 sealed class Screen(val route: String) {
+
     object Splash : Screen("splash")
     object Landing : Screen("landing")
     object Login : Screen("login")
     object SignUp : Screen("signup")
     object ProfileSetup : Screen("profileSetup")
+    object LogFood : Screen("logFood")
 }
 
-
-// ViewModelFactory to provide UserDao to AuthViewModel
-class AuthViewModelFactory(private val userDao: UserDao) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return AuthViewModel(userDao) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
-
-
-// Main navigation host
 @Composable
-fun AppNavHost() {
+fun AppNavHost(apiKey: String) {
+
     val context = LocalContext.current
     val navController: NavHostController = rememberNavController()
 
-    // Get UserDao from Room
-    val userDao = AppDatabase.getDatabase(context).userDao()
+    // get User and Food DAO instance
+    val userDao: UserDao = AppDatabase.getDatabase(context).userDao()
+    val foodDao: FoodDao = AppDatabase.getDatabase(context).foodDao()
 
-    // Inject AuthViewModel using Factory
-    val authViewModel: AuthViewModel = viewModel(
-        factory = AuthViewModelFactory(userDao)
-    )
+    // auth viewmodel initialization
+    val authViewModel: AuthViewModel =
+        viewModel(factory = AuthViewModelFactory(userDao))
 
-    NavHost(navController = navController, startDestination = Screen.Splash.route) {
+    // food viewmodel initialization
+    val foodViewModel: FoodViewModel =
+        viewModel(factory = FoodViewModelFactory(foodDao, ApiClient.api))
 
-        // Splash Screen
+    // navigation graph setup
+    NavHost(
+        navController = navController,
+        startDestination = Screen.Splash.route
+    ) {
+
+        // Splash screen Navigation
         composable(Screen.Splash.route) {
-            SplashScreen(navController)
+            SplashScreen(navController) // open
         }
 
-        // Login Screen
+        // Login screen Navigation
         composable(Screen.Login.route) {
             LoginScreen(navController, authViewModel)
         }
 
-        // Sign-Up Screen
+        // Signup screen Navigation
         composable(Screen.SignUp.route) {
             SignUpScreen(navController, authViewModel)
         }
 
-        // Profile Setup Screen
+        // Profile setup Navigation
         composable(Screen.ProfileSetup.route) {
             ProfileSetupScreen(navController, authViewModel)
         }
 
-        // Landing Screen
+        // Landing screen Navigation
         composable(Screen.Landing.route) {
             LandingScreen(navController, authViewModel)
+        }
+
+        // LogFood Screen Navigation
+        composable(Screen.LogFood.route) {
+            LogFoodScreen(navController, foodViewModel, apiKey)
         }
     }
 }

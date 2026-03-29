@@ -3,10 +3,8 @@ package com.example.fittrack.screens
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -14,15 +12,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.fittrack.AuthViewModel
 import com.example.fittrack.R
 import com.example.fittrack.Screen
+import com.example.fittrack.viewmodels.AuthViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 
@@ -35,7 +33,7 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // Google Sign-In launcher
+    // google sign-in launcher
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -44,24 +42,27 @@ fun LoginScreen(
             val account = task.getResult(Exception::class.java)
             authViewModel.loginWithGoogle(account?.idToken ?: "") { profileExists ->
                 if (profileExists) {
-                    navController.navigate(Screen.Landing.route) {
+                    navController.navigate(Screen.Landing.route) { // navigate to landing
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 } else {
-                    navController.navigate(Screen.ProfileSetup.route) {
+                    navController.navigate(Screen.ProfileSetup.route) {// navigate to profile setup
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 }
             }
         } catch (e: Exception) {
-            Toast.makeText(context, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                context,
+                "Google Sign-In failed: ${e.message}", // show failure message
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
-    // Background Color
     val gradientBackground = Brush.verticalGradient(
         colors = listOf(
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
             MaterialTheme.colorScheme.background
         )
     )
@@ -69,53 +70,74 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(gradientBackground),
-        contentAlignment = Alignment.Center
+            .background(gradientBackground)
+            .padding(24.dp)
     ) {
-        Card(
+
+        Column(
             modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
+
+            // app title text
+            Text(
+                text = "FitTrack",
+                fontSize = 34.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            // spacer
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // app tagline text
+            Text(
+                text = "Track your fitness. Transform your life.",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
+
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 6.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    "Welcome Back",
-                    fontSize = 32.sp,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Login to continue",
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(24.dp))
 
-                // Email field
+                Spacer(modifier = Modifier.height(28.dp))
+
+                // Email Field
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email") },
+                    label = { Text("Email Address") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
                 )
-                Spacer(Modifier.height(16.dp))
 
-                // Password field
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Password Field
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     label = { Text("Password") },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
                 )
-                Spacer(Modifier.height(24.dp))
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Login Button
                 Button(
@@ -134,77 +156,83 @@ fun LoginScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(12.dp)
+                        .height(55.dp),
+                    shape = RoundedCornerShape(14.dp)
                 ) {
-                    Text("Login", fontSize = 18.sp)
+                    Text("Login", fontSize = 16.sp, fontWeight = FontWeight.SemiBold) // Login
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
-                // Sign-Up link
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Don't have an account?", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.width(4.dp))
+                    Divider(modifier = Modifier.weight(1f))
+                    Text(
+                        text = "  OR  ",
+                        color = MaterialTheme.colorScheme.outline,
+                        fontSize = 12.sp
+                    )
+                    Divider(modifier = Modifier.weight(1f))
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Continue with google
+                OutlinedButton(
+                    onClick = {
+                        val gso = GoogleSignInOptions.Builder(
+                            GoogleSignInOptions.DEFAULT_SIGN_IN
+                        )
+                            .requestIdToken(context.getString(R.string.default_web_client_id))
+                            .requestEmail()
+                            .build()
+
+                        val googleClient = GoogleSignIn.getClient(context, gso)
+                        launcher.launch(googleClient.signInIntent)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(55.dp),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Continue with Google", fontSize = 15.sp)
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                // dont have account signup
+                Row {
+                    Text(
+                        "Don't have an account? ",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 13.sp
+                    )
                     Text(
                         "Sign Up",
                         color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
                         modifier = Modifier.clickable {
                             navController.navigate(Screen.SignUp.route)
                         }
                     )
                 }
 
-                Spacer(Modifier.height(24.dp))
-                Text("OR", color = MaterialTheme.colorScheme.outline)
-                Spacer(Modifier.height(16.dp))
-
-                // Google Login Button
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(
-                                    Color(0xFF4285F4),
-                                    Color(0xFF34A853),
-                                    Color(0xFFFBBC05),
-                                    Color(0xFFEA4335)
-                                )
-                            ),
-                            RoundedCornerShape(12.dp)
-                        )
-                        .clickable(
-                            indication = LocalIndication.current,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) {
-                            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                                .requestIdToken(context.getString(R.string.default_web_client_id))
-                                .requestEmail()
-                                .build()
-                            val googleClient = GoogleSignIn.getClient(context, gso)
-                            launcher.launch(googleClient.signInIntent)
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Continue with Google", color = Color.White, fontSize = 16.sp)
-                }
-
-                Spacer(Modifier.height(16.dp))
-
-                // Circle Loader
+                // circle loader
                 if (authViewModel.loading.value) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    CircularProgressIndicator()
                 }
 
-                // Error message
                 authViewModel.errorMessage.value?.let { msg ->
-                    Spacer(Modifier.height(12.dp))
-                    Text(msg, color = MaterialTheme.colorScheme.error)
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        msg,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 13.sp
+                    )
                 }
             }
         }

@@ -1,6 +1,7 @@
-package com.example.fittrack.data
+package com.example.fittrack.data.dao
 
 import androidx.room.*
+import com.example.fittrack.data.model.UserEntity
 
 @Dao
 interface UserDao {
