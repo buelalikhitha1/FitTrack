@@ -6,16 +6,20 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.fittrack.data.dao.FoodDao
 import com.example.fittrack.data.dao.UserDao
+import com.example.fittrack.data.dao.WorkoutDao
 import com.example.fittrack.data.model.FoodEntity
 import com.example.fittrack.data.model.UserEntity
+import com.example.fittrack.data.model.WorkoutEntity
 
 // Room database
-@Database(entities = [UserEntity::class, FoodEntity::class], version = 1)
+@Database(entities = [UserEntity::class, FoodEntity::class, WorkoutEntity::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     // access user DAO
     abstract fun userDao(): UserDao
     // access food DAO
     abstract fun foodDao(): FoodDao
+
+    abstract fun workoutDao(): WorkoutDao
 
     companion object {
         @Volatile

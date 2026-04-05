@@ -43,6 +43,12 @@ fun AppNavHost(apiKey: String) {
     val foodViewModel: FoodViewModel =
         viewModel(factory = FoodViewModelFactory(foodDao, ApiClient.api))
 
+
+    val workoutDao = AppDatabase.getDatabase(context).workoutDao()
+
+    val workoutViewModel: WorkoutViewModel =
+        viewModel(factory = WorkoutViewModelFactory(workoutDao))
+
     // navigation graph setup
     NavHost(
         navController = navController,
@@ -77,6 +83,14 @@ fun AppNavHost(apiKey: String) {
         // LogFood Screen Navigation
         composable(Screen.LogFood.route) {
             LogFoodScreen(navController, foodViewModel, apiKey)
+        }
+
+        composable(Screen.WorkoutPlan.route) {
+            WorkoutPlanScreen(navController, workoutViewModel)
+        }
+
+        composable(Screen.WorkoutHistory.route) {
+            WorkoutHistoryScreen(navController, workoutViewModel)
         }
     }
 }
