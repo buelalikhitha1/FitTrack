@@ -2,15 +2,20 @@ package com.example.fittrack.data.dao
 
 import androidx.room.*
 import com.example.fittrack.data.model.UserEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
 
-    // Add user to database
+    // insert user
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: UserEntity)
 
-    // Get user by UID
+    // fetch by uid
     @Query("SELECT * FROM user_profile WHERE uid = :uid LIMIT 1")
-    suspend fun getUserByUid(uid: String): UserEntity?
+    fun getUserByUid(uid: String): Flow<UserEntity?>
+
+    // update record
+    @Update
+    suspend fun updateUser(user: UserEntity)
 }

@@ -1,6 +1,6 @@
 package com.example.fittrack.data.model
 
-// User Profile
+// User Profile Class
 data class UserProfile(
     val age: String,
     val height: String,

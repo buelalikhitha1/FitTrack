@@ -13,18 +13,23 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.fittrack.Screen
+import com.example.fittrack.components.BottomNavBar
 import com.example.fittrack.viewmodels.FoodViewModel
 import java.io.File
 import java.io.FileOutputStream
 
+// Log food screen
 @Composable
 fun LogFoodScreen(
     navController: NavController,
@@ -32,19 +37,16 @@ fun LogFoodScreen(
     apiKey: String
 ) {
 
-    // get current context
+    // Context setup
     val context = LocalContext.current
-    // vertical scroll state
     val scrollState = rememberScrollState()
 
-    // selected image URI
+    // Image states
     var selectedImage by remember { mutableStateOf<Uri?>(null) }
-
-    // image file object
     var imageFile by remember { mutableStateOf<File?>(null) }
-    var foodName by remember { mutableStateOf("") } // food name input
+    var foodName by remember { mutableStateOf("") }
 
-    // gallery image picker
+    // Gallery launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -54,230 +56,278 @@ fun LogFoodScreen(
         }
     }
 
-    // camera preview launcher
+    // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicturePreview()
     ) { bitmap: Bitmap? ->
         bitmap?.let {
-            val file = bitmapToFile(it, context) // convert bitmap to file
+            val file = bitmapToFile(it, context)
             selectedImage = Uri.fromFile(file)
-            imageFile = file // store image file
+            imageFile = file
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp)
-            .verticalScroll(scrollState),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Scaffold(
+        bottomBar = { BottomNavBar(navController) }
+    ) { padding ->
 
-        Spacer(Modifier.height(8.dp))
-
-        // log food screen title
-        Text(
-            text = "Log Food",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        // capture
-        Text(
-            text = "Capture or upload food and track nutrition",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(Modifier.height(24.dp))
-
-        // Image selection buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        // Main column
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
         ) {
 
-            OutlinedButton(
-                onClick = { galleryLauncher.launch("image/*") },
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(Icons.Default.Image, contentDescription = null)
-                Spacer(Modifier.width(6.dp))
-                Text("Gallery")
-            }
-
-            Button(
-                onClick = { cameraLauncher.launch(null) },
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(Icons.Default.CameraAlt, contentDescription = null)
-                Spacer(Modifier.width(6.dp))
-                Text("Camera")
-            }
-        }
-
-        Spacer(Modifier.height(20.dp))
-
-        // Image preview
-        selectedImage?.let {
-
+            // Top header
             Surface(
-                shape = RoundedCornerShape(16.dp),
-                tonalElevation = 4.dp,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
+                tonalElevation = 6.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Box(
-                    modifier = Modifier.padding(12.dp),
-                    contentAlignment = Alignment.Center
+
+                // Header content
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp, horizontal = 20.dp)
                 ) {
-                    Image(
-                        painter = rememberAsyncImagePainter(it),
-                        contentDescription = "Selected Food Image",
-                        modifier = Modifier.size(220.dp)
+                    Text(
+                        text = "Log Food",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+
+                    Text(
+                        text = "Capture or upload food and analyze nutrition",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
 
             Spacer(Modifier.height(16.dp))
-        }
 
-        // Food Name input
-        OutlinedTextField(
-            value = foodName,
-            onValueChange = { foodName = it },
-            label = { Text("Food Name") },
-            leadingIcon = {
-                Icon(Icons.Default.Fastfood, contentDescription = null)
-            },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp)
-        )
-
-        Spacer(Modifier.height(18.dp))
-
-        // Analyze Button
-        Button(
-            onClick = {
-                if (foodName.isNotBlank())
-                    foodViewModel.recognizeFood(imageFile, apiKey, foodName)
-            },
-            enabled = foodName.isNotBlank(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(14.dp)
-        ) {
-            Text("Analyze Food")
-        }
-
-        Spacer(Modifier.height(18.dp))
-
-        // circle loader
-        if (foodViewModel.loading.value) {
-            CircularProgressIndicator()
-            Spacer(Modifier.height(10.dp))
-        }
-
-        // show error message
-        foodViewModel.errorMessage.value?.let {
-            Text(
-                text = it,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-
-        // Recognized food result
-        foodViewModel.recognizedFood.value?.let { food ->
-
-            Spacer(Modifier.height(20.dp))
-
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                tonalElevation = 4.dp
-            ) {
-
-                Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-
-                    // recognized food name
-                    Text(
-                        text = food.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    Divider()
-
-                    Text("Calories: ${food.calories.toInt()} kcal")
-                    Text("Protein: ${"%.1f".format(food.protein)} g")
-                    Text("Carbs: ${"%.1f".format(food.carbs)} g")
-                    Text("Fat: ${"%.1f".format(food.fat)} g")
-                }
-            }
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-        // recent logs title
-        Text(
-            text = "Recent Logs",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Spacer(Modifier.height(10.dp))
-
-        foodViewModel.recentFoods.value.forEach { food ->
-
-            Surface(
+            // Scroll content
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
-                shape = RoundedCornerShape(14.dp),
-                tonalElevation = 3.dp
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp)
+                    .verticalScroll(scrollState),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                Spacer(Modifier.height(18.dp))
+
+                // Image buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
 
-                    // logged food name
-                    Text(
-                        text = food.name,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    // Gallery button
+                    OutlinedButton(
+                        onClick = { galleryLauncher.launch("image/*") },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.Image, null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Gallery")
+                    }
 
-                    Spacer(Modifier.height(4.dp))
-
-                    Text("Calories: ${food.calories.toInt()} kcal")
-                    Text("Protein: ${"%.1f".format(food.protein)} g")
-                    Text("Carbs: ${"%.1f".format(food.carbs)} g")
-                    Text("Fat: ${"%.1f".format(food.fat)} g")
+                    // Camera button
+                    Button(
+                        onClick = { cameraLauncher.launch(null) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.CameraAlt, null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Camera")
+                    }
                 }
+
+                Spacer(Modifier.height(20.dp))
+
+                // Image preview
+                selectedImage?.let {
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        tonalElevation = 4.dp,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+
+                        Box(
+                            modifier = Modifier.padding(12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+
+                            Image(
+                                painter = rememberAsyncImagePainter(it),
+                                contentDescription = null,
+                                modifier = Modifier.size(220.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                // Food input
+                OutlinedTextField(
+                    value = foodName,
+                    onValueChange = { foodName = it },
+                    label = { Text("Food Name") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Fastfood, null)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp)
+                )
+
+                Spacer(Modifier.height(18.dp))
+
+                // Analyze button
+                Button(
+                    onClick = {
+                        foodViewModel.recognizeFood(
+                            imageFile,
+                            apiKey,
+                            foodName
+                        )
+                    },
+                    enabled = foodName.isNotBlank(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Analyze Food")
+                }
+
+                Spacer(Modifier.height(18.dp))
+
+                // Loading indicator
+                if (foodViewModel.loading.value) {
+                    CircularProgressIndicator()
+                }
+
+                // Error message
+                foodViewModel.errorMessage.value?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
+                // Result card
+                foodViewModel.recognizedFood.value?.let { food ->
+
+                    Spacer(Modifier.height(20.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = Color.White,
+                        tonalElevation = 6.dp,
+                        shadowElevation = 6.dp,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+
+                        // Result content
+                        Column(modifier = Modifier.padding(20.dp)) {
+
+                            // Food title
+                            Text(
+                                text = food.name,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(bottom = 6.dp)
+                            )
+
+                            Divider(
+                                color = Color.Gray.copy(alpha = 0.4f),
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(vertical = 12.dp)
+                            )
+
+                            // Nutrition data
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+
+                                Text(
+                                    text = "Calories: ${food.calories.toInt()} kcal",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+
+                                Text(
+                                    text = "Protein: ${food.protein} g",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+
+                                Text(
+                                    text = "Carbs: ${food.carbs} g",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+
+                                Text(
+                                    text = "Fat: ${food.fat} g",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                // History button
+                OutlinedButton(
+                    onClick = {
+                        navController.navigate(Screen.FoodHistory.route)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.History, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("View Food History")
+                }
+
+                Spacer(Modifier.height(40.dp))
             }
         }
-
-        Spacer(Modifier.height(30.dp))
     }
 }
 
-// Convert URI to file
+// URI to file
 fun uriToFile(uri: Uri, context: android.content.Context): File? {
     return try {
+        // Open stream
         val inputStream = context.contentResolver.openInputStream(uri)
-        val file = File(context.cacheDir, "temp_image.jpg") // create temp file
-        inputStream?.use { input -> FileOutputStream(file).use { output -> input.copyTo(output) } }
+        // Cache file
+        val file = File(context.cacheDir, "temp_image.jpg")
+        inputStream?.use { input ->
+            FileOutputStream(file).use { output ->
+                input.copyTo(output)
+            }
+        }
         file
-    } catch (e: Exception) { e.printStackTrace(); null }
+    } catch (e: Exception) {
+        null
+    }
 }
 
-// Convert bitmap to file
+// Bitmap to file
 fun bitmapToFile(bitmap: Bitmap, context: android.content.Context): File {
-    val file = File(context.cacheDir, "captured_image.jpg") // create captured file
-    FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
+    // Cache file
+    val file = File(context.cacheDir, "captured.jpg")
+    FileOutputStream(file).use {
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
+    }
     return file
 }

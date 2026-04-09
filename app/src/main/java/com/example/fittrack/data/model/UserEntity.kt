@@ -4,9 +4,10 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 // User Profile Table
-@Entity(tableName = "user_profile")
+@Entity(tableName = "user_profile") // table name
 data class UserEntity(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+
+    @PrimaryKey
     val uid: String,      // Firebase user UID
     val age: String,
     val height: String,

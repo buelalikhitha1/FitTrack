@@ -89,7 +89,6 @@ fun LoginScreen(
                 color = MaterialTheme.colorScheme.primary
             )
 
-            // spacer
             Spacer(modifier = Modifier.height(6.dp))
 
             // app tagline text
@@ -190,7 +189,11 @@ fun LoginScreen(
                             .build()
 
                         val googleClient = GoogleSignIn.getClient(context, gso)
-                        launcher.launch(googleClient.signInIntent)
+
+                        // Sign out previous Google account to force picker
+                        googleClient.signOut().addOnCompleteListener {
+                            launcher.launch(googleClient.signInIntent)
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()

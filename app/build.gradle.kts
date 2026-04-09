@@ -117,4 +117,7 @@ dependencies {
 
     // Icons
     implementation("androidx.compose.material:material-icons-extended")
+
+    // Workmanager (Notifications)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }

@@ -1,20 +1,46 @@
 package com.example.fittrack.data.dao
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import com.example.fittrack.data.model.FoodEntity
+import kotlinx.coroutines.flow.Flow
 
-// Room database access object
 @Dao
 interface FoodDao {
 
-    // insert or replace food
+    // insert food
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFood(food: FoodEntity)
 
-    // get latest 20 foods
-    @Query("SELECT * FROM food_log ORDER BY id DESC LIMIT 20")
-    suspend fun getRecentFoodLogs(): List<FoodEntity>
+    // recent foods
+    @Query("""
+        SELECT * FROM food_log 
+        WHERE uid = :uid
+        ORDER BY id DESC 
+        LIMIT 20
+    """)
+    fun getRecentFoodLogs(uid: String): Flow<List<FoodEntity>>
+
+    // all foods
+    @Query("""
+        SELECT * FROM food_log 
+        WHERE uid = :uid
+        ORDER BY id DESC
+    """)
+    fun getAllFoodLogs(uid: String): Flow<List<FoodEntity>>
+
+    // today's total calories
+    @Query("""
+        SELECT SUM(calories) 
+        FROM food_log 
+        WHERE uid = :uid AND date = :date
+    """)
+    fun getTodayCalories(uid: String, date: String): Flow<Double?>
+
+    // delete food
+    @Delete
+    suspend fun deleteFood(food: FoodEntity)
+
+    // clear all foods
+    @Query("DELETE FROM food_log WHERE uid = :uid")
+    suspend fun clearFoodLogs(uid: String)
 }
